@@ -1,0 +1,33 @@
+
+version: '3'
+
+services:
+  flask_app:
+    container_name: flask_app
+    build: ./flask_app
+    restart: always
+    command: gunicorn -w 1 -b 0.0.0.0:8000 wsgi:server
+    depends_on:
+      - db
+  nginx:
+    container_name: nginx
+    restart: always
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - flask_app
+    
+  db:
+    container_name: data_base
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    build: ./postgres
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    
