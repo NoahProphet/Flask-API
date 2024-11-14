@@ -1,6 +1,9 @@
 
 version: '3'
 
+networks:
+  kong-net:
+
 services:
   flask_app:
     container_name: flask_app
@@ -9,6 +12,9 @@ services:
     command: gunicorn -w 1 -b 0.0.0.0:8000 wsgi:server
     depends_on:
       - db
+    networks:
+      - kong-net
+
   nginx:
     container_name: nginx
     restart: always
@@ -17,6 +23,8 @@ services:
       - "80:80"
     depends_on:
       - flask_app
+    networks:
+      - kong-net
     
   db:
     container_name: data_base
@@ -25,9 +33,64 @@ services:
       POSTGRES_PASSWORD: test
       POSTGRES_DB: test
     build: ./postgres
-    ports:
-      - 5432:5432
     restart: always
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - kong-net
+
+  kong-db:
+    image: postgres:13
+    container_name: kong-db
+    environment:
+      POSTGRES_DB: kong-db
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kongpass  # Ensure this matches Kong's password
+    restart: always
+    volumes:
+      - ./postgres-kong:/var/lib/postgresql/data
+    networks:
+      - kong-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  kong:
+    image: kong:latest
+    container_name: kong
+    #command: "kong migrations bootstrap"
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_DATABASE: kong-db
+      KONG_PG_PASSWORD: kongpass  # Must match the password defined in kong-db
+      KONG_PG_USER: kong  # This should match the user in kong-db
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: kong:8001
+      KONG_ADMIN_GUI_URL: http://kong:8002
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+      - "8002:8002"
+      - "8445:8445"
+      - "8003:8003"
+      - "8004:8004"
+    restart: on-failure
+    networks:
+      - kong-net
+    depends_on:
+      - kong-db
+    links:
+      - kong-db
+
+
+    
+
     
