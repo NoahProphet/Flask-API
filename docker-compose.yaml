@@ -1,5 +1,5 @@
 
-version: '3'
+version: '3.8'
 
 networks:
   kong-net:
@@ -19,8 +19,6 @@ services:
     container_name: nginx
     restart: always
     build: ./nginx
-    ports:
-      - "80:80"
     depends_on:
       - flask_app
     networks:
@@ -56,11 +54,24 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
+  
+  kong-migration:
+    image: kong
+    container_name: kong-migration
+    command: "kong migrations up"
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_DATABASE: kong-db
+      KONG_PG_PASSWORD: kongpass  
+      KONG_PG_USER: kong 
+    networks:
+      - kong-net
+
 
   kong:
-    image: kong:latest
+    image: kong
     container_name: kong
-    #command: "kong migrations bootstrap"
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
@@ -72,7 +83,8 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: kong:8001
-      KONG_ADMIN_GUI_URL: http://kong:8002
+      ADMIN_GUI_URL: http://kong:8002
+      ADMIN_API_URI: http://kong:8001
     ports:
       - "8000:8000"
       - "8443:8443"
@@ -87,10 +99,11 @@ services:
       - kong-net
     depends_on:
       - kong-db
+      - kong-migration
     links:
       - kong-db
-
-
+  
+  
     
 
     
