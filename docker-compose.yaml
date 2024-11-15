@@ -45,7 +45,7 @@ services:
     environment:
       POSTGRES_DB: kong-db
       POSTGRES_USER: kong
-      POSTGRES_PASSWORD: kongpass  # Ensure this matches Kong's password
+      POSTGRES_PASSWORD: kongpass  
     restart: always
     volumes:
       - ./postgres-kong:/var/lib/postgresql/data
@@ -65,8 +65,8 @@ services:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-db
       KONG_PG_DATABASE: kong-db
-      KONG_PG_PASSWORD: kongpass  # Must match the password defined in kong-db
-      KONG_PG_USER: kong  # This should match the user in kong-db
+      KONG_PG_PASSWORD: kongpass  
+      KONG_PG_USER: kong  
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr

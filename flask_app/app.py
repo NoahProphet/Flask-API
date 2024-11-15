@@ -22,16 +22,25 @@ def hello_world():
 
 @server.route('/create', methods=['POST'])
 def create():
-	# Get the username and email from the request body
-	username = request.form.get('username')
-	email = request.form.get('email')
+    # Get the username and email from the request body
+    username = request.form.get('username')
+    email = request.form.get('email')
 
-	# Insert the data into the database
-	cur = conn.cursor()
-	cur.execute("INSERT INTO users (username, email) VALUES (%s, %s)", (username, email))
-	conn.commit()
+    # Validate input
+    if not username or not email:
+        return jsonify({"error": "Username and email are required!"}), 400
 
-	return 'User created successfully!'
+    try:
+        # Insert the data into the database
+        cur = conn.cursor()
+        cur.execute("INSERT INTO users (username, email) VALUES (%s, %s)", (username, email))
+        conn.commit()
+        cur.close()
+
+        return jsonify({"message": "User created successfully!"}), 201
+    except psycopg2.Error as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @server.route('/select', methods=['GET'])
 def select():
