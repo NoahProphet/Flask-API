@@ -55,18 +55,18 @@ services:
       timeout: 5s
       retries: 10
   
-  kong-migration:
-    image: kong
-    container_name: kong-migration
-    command: "kong migrations up"
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-db
-      KONG_PG_DATABASE: kong-db
-      KONG_PG_PASSWORD: kongpass  
-      KONG_PG_USER: kong 
-    networks:
-      - kong-net
+  #kong-migration:
+  #  image: kong
+  #  container_name: kong-migration
+  #  command: "kong migrations bootstrap"
+  #  environment:
+  #    KONG_DATABASE: postgres
+  #    KONG_PG_HOST: kong-db
+  #    KONG_PG_DATABASE: kong-db
+  #    KONG_PG_PASSWORD: kongpass  
+  #    KONG_PG_USER: kong 
+  #  networks:
+  #    - kong-net
 
 
   kong:
@@ -99,7 +99,7 @@ services:
       - kong-net
     depends_on:
       - kong-db
-      - kong-migration
+    #  - kong-migration
     links:
       - kong-db
   
