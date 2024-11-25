@@ -103,7 +103,32 @@ services:
     links:
       - kong-db
   
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - kong-net
+    depends_on:
+      - kong
+      - prometheus
   
-    
+  prometheus:
+    image: prom/prometheus:latest
+    user: root
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./prometheus-data:/prometheus
+    command: "--config.file=/etc/prometheus/prometheus.yaml"
+    ports:
+      - "9090:9090"
+    networks:
+      - kong-net
+    restart: unless-stopped
 
     
